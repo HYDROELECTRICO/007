@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Compare Products | ElectricalsKart</title>
+<link as="style" href="shared.css" rel="preload"/>
+<link href="shared.css" rel="stylesheet"/>
+<meta content="Compare products from the same category side by side using specifications, price, brand, availability and quality attributes." name="description"/><meta content="#0a2d6e" name="theme-color"/><meta content="yes" name="mobile-web-app-capable"/><meta content="yes" name="apple-mobile-web-app-capable"/><meta content="ElectricalsKart" name="apple-mobile-web-app-title"/><meta content="summary_large_image" name="twitter:card"/><meta content="Compare Products | ElectricalsKart" name="twitter:title"/><meta content="Compare products from the same category side by side using specifications, price, brand, availability and quality attributes." name="twitter:description"/><meta content="https://electricalskart.com/assets/icons/icon-512.png" name="twitter:image"/><meta content="website" property="og:type"/><meta content="Compare Products | ElectricalsKart" property="og:title"/><meta content="Compare products from the same category side by side using specifications, price, brand, availability and quality attributes." property="og:description"/><meta content="https://electricalskart.com/compare.html" property="og:url"/><meta content="https://electricalskart.com/assets/icons/icon-512.png" property="og:image"/><meta content="ElectricalsKart" property="og:site_name"/><link href="https://electricalskart.com/compare.html" rel="canonical"/><link href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Crect width='26' height='26' rx='6' fill='%230a2d6e'/%3E%3Cpolygon points='13,4 15,10 13,10 15,22 11,13 13,13 11,4' fill='%23f5a623'/%3E%3C/svg%3E" rel="icon"/><link href="assets/icons/apple-touch-icon.png" rel="apple-touch-icon"/><link href="site.webmanifest" rel="manifest"/></head>
+<body>
+<header id="siteHeader"></header>
+<div class="page-header"><div class="page-header-inner"><div class="breadcrumb"><a href="index.html">Home</a> › Compare</div><h1>Product Comparison</h1><p>Compare unlimited products from the same category. Differences are highlighted automatically.</p></div></div>
+<main id="mainContent" style="max-width:1200px;margin:30px auto;padding:0 20px;">
+<div class="dealer-card" style="max-width:none;margin:0 0 18px;"><h3>Add products to compare</h3><input aria-label="Search products to add" id="compareSearch" placeholder="Search products to add"/><div class="ek-chip-row" id="compareSuggestions"></div><button class="btn-clear" onclick="clearCompare()">Clear Compare</button></div>
+<div id="compareRoot"></div>
+</main>
+<footer class="site-footer" id="siteFooter"></footer>
+<script src="common.js"></script>
+<script>
+let products=[];
+function attrVal(p,k){ return (p.comparison_attributes||{})[k] || ''; }
+function renderCompare(){
+  const root=document.getElementById('compareRoot');
+  const ids=ekIds('ek_compare');
+  const items=ids.map(id=>ekProductById(products,id)).filter(Boolean);
+  if(!items.length){ root.innerHTML='<div class="dealer-card"><p>No products selected. Add products from product cards or search above.</p></div>'; return; }
+  const cat=items[0].category;
+  const invalid=items.filter(p=>p.category!==cat);
+  if(invalid.length){ root.innerHTML='<div class="dealer-card"><p>Please compare products from the same category only.</p><button onclick="clearCompare()" class="btn-dark">Clear</button></div>'; return; }
+  const labels=Object.keys(items[0].comparison_attributes||{});
+  let html='<div style="overflow:auto"><table class="compare-table"><tr><th>Attribute</th>'+items.map(p=>'<th><img src="'+p.variants[0].image+'" style="width:90px;height:90px;object-fit:contain"><br>'+p.name+'<br><button class="ek-icon-btn" onclick="removeCompare('+p.id+')">Remove</button></th>').join('')+'</tr>';
+  labels.forEach(label=>{ const vals=items.map(p=>String(attrVal(p,label))); const diff=new Set(vals).size>1; html+='<tr><th>'+label+'</th>'+vals.map(v=>'<td class="'+(diff?'diff-cell':'')+'">'+(v||'—')+'</td>').join('')+'</tr>'; });
+  html+='</table></div>'; root.innerHTML=html;
+}
+function removeCompare(id){ ekSaveIds('ek_compare',ekIds('ek_compare').filter(x=>x!==id)); renderCompare(); }
+function clearCompare(){ ekSaveIds('ek_compare',[]); renderCompare(); }
+document.addEventListener('DOMContentLoaded',()=>{ ekLoadProducts(p=>{products=p; renderCompare(); const input=document.getElementById('compareSearch'); input.addEventListener('input',()=>{ const q=input.value.toLowerCase().trim(); const box=document.getElementById('compareSuggestions'); if(!q){box.innerHTML='';return;} box.innerHTML=products.filter(p=>(p.name+' '+p.brand+' '+(p.tags||[]).join(' ')).toLowerCase().includes(q)).slice(0,10).map(p=>'<button class="ek-icon-btn" onclick="addCompare('+p.id+');setTimeout(renderCompare,100)">'+p.name+'</button>').join(''); }); }); });
+</script>
+</body>
+</html>
